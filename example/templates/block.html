@@ -1,0 +1,15 @@
+  <div class="grid-item" data-id="{{ html .Id }}" data-source_type="{{ html .Origin.Type }}">
+        {{ if .HasImage }}
+        <a href="{{ html .Link }}" title="{{ html .Title }}" target="_blank">
+            <img alt="{{ html .Title }}" src="image/{{ html .Id }}" {{ if .ImageWidth }}width="{{ .ImageWidth }}"{{end}} {{ if .ImageHeight }}height="{{ .ImageHeight }}"{{end}}/>
+        </a>
+        {{ else }}
+        <div class="text-box">
+            <div class="item-type">{{if eq .Origin.Type "github-user-repos" }}Software project{{ end }}</div>
+            <div class="item-title">
+                <a target="_blank" href="{{ html .Link }}">{{ html .Title }}</a>
+            </div>
+            {{ if .Content }}<p>{{ html .Content }}</p>{{ end }}
+        </div>
+        {{ end }}
+    </div>

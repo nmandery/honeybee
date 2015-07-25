@@ -1,0 +1,44 @@
+sources:
+    - type: github-user-repos
+      params:
+          user: nmandery
+          includeForks: true
+      filters:
+#          limit: 5
+
+#    - type: flickr-user-photos
+#      params:
+#           user: 13704013@N00
+#           key: your-api-key
+#      filters:
+#           title: (alps|mountain|peak|valley)
+#           content: image
+
+    - type: flickr-user-photoset
+      params:
+           user: 13704013@N00
+           key: your-api-key
+           photoset: 72157655492210505
+
+http:
+    port: 9008
+
+image:
+    maxheight: 0
+    maxwidth: 350
+
+cache:
+    directory: /tmp/honeybee-cache
+
+vars:
+    site_title: Your title
+    site_intro_: some more description
+    masonry_column_width: 10
+    masonry_gutter: 10
+    contact_email: me@example.com
+    title_box_height: 350
+
+meta-tags:
+    author: Your name
+
+update-interval: 30

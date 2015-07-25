@@ -1,0 +1,49 @@
+.container-fluid {
+    margin-top: 20px;
+}
+.title-box {
+    background-color: #337ab7;
+    padding: 10px;
+    color: #fff;
+}
+.right {
+    text-align: right;
+}
+.header h1 {
+    font-family: 'Oleo Script', cursive;
+    margin: 10px;
+}
+.contact {
+    position: absolute;
+    bottom: 0px;
+    right: 0px;
+    padding: 10px;
+}
+.contact a {
+    text-decoration: underline;
+    color: #fff;
+}
+
+.grid-item {
+    float:left;
+}
+
+.text-box {
+    padding: 10px;
+    border: 2px solid #888;
+}
+
+.text-box .item-type {
+    font-variant: small-caps;
+    color: #888;
+}
+
+.text-box .item-title {
+    font-size: 20px; 
+    margin-bottom: 10px;
+    margin-top: 15px;
+}
+
+.centered {
+    margin: 0 auto;
+}
