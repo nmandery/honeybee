@@ -1,4 +1,4 @@
-package main
+package honeybee
 
 /*
 Description of the "extra" parameters:

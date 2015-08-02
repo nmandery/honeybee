@@ -1,4 +1,4 @@
-package main
+package honeybee
 
 import (
 	"crypto/sha1"

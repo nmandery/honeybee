@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+    "github.com/nmandery/honeybee"
 )
 
 func init() {
@@ -32,7 +33,7 @@ func main() {
 	}
 
 	var err error
-	srv, err := NewServer(args[0])
+	srv, err := honeybee.NewServer(args[0])
 	if err != nil {
 		log.Printf("%v\n", err)
 		os.Exit(1)
