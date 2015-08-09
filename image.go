@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
-	"github.com/gregjones/httpcache/diskcache"
 	"github.com/peterbourgon/diskv"
 	"image"
 	"log"
@@ -18,6 +17,8 @@ type ImageProxyWrapper struct {
 	proxy *imageproxy.Proxy
 	// transform/resize/scale parameters for imageproxy requests
 	proxyTransform string
+
+	forgettingCache *ForgettingCache
 }
 
 // create a caching and resizing image proxy
@@ -32,7 +33,7 @@ func NewImageProxyWrapper(c *Configuration) (proxyWrapper *ImageProxyWrapper, er
 		CacheSizeMax: 0,
 		Transform:    cacheTransformKeyToPath,
 	})
-	cache := diskcache.NewWithDiskv(diskCache)
+	cache := NewForgettingCache(diskCache, 10)
 	proxy := imageproxy.NewProxy(nil, cache)
 
 	proxyTransform := ""
@@ -50,10 +51,15 @@ func NewImageProxyWrapper(c *Configuration) (proxyWrapper *ImageProxyWrapper, er
 	log.Printf("Transforming images by \"%v\"\n", proxyTransform)
 
 	proxyWrapper = &ImageProxyWrapper{
-		proxy:          proxy,
-		proxyTransform: proxyTransform,
+		proxy:           proxy,
+		proxyTransform:  proxyTransform,
+		forgettingCache: cache,
 	}
 	return
+}
+
+func (ipw *ImageProxyWrapper) ForgetSome() {
+	ipw.forgettingCache.ForgetSome()
 }
 
 // load an external image or fetch it from the cache

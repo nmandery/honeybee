@@ -61,6 +61,7 @@ func NewServer(configDirectory string) (srv *Server, err error) {
 		doUpdatingChan: make(chan bool),
 	}
 
+	// goroutine to update the blocks from the sources
 	go func() {
 		doUpdating := false
 		updateTimeout := 10
@@ -87,7 +88,6 @@ func NewServer(configDirectory string) (srv *Server, err error) {
 			} else {
 				doUpdating = <-srv.doUpdatingChan
 			}
-
 		}
 	}()
 
@@ -111,6 +111,8 @@ func (s *Server) StopUpdating() {
 }
 
 func (s *Server) pullSources() (err error) {
+	s.proxyWrapper.ForgetSome()
+
 	// use the imageanalyser to fill the size attributes of the blocks
 	// this also has the effect of pre-seeding the cache
 	ia := NewImageAnalyzer(s.proxyWrapper)
