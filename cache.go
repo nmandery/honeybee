@@ -7,7 +7,6 @@ import (
 	"github.com/peterbourgon/diskv"
 	"hash/crc32"
 	"io"
-	"log"
 )
 
 // ForgettingCache is an implementation of httpcache.Cache that supplements the in-memory map with persistent storage
@@ -18,6 +17,8 @@ type ForgettingCache struct {
 	// during on call of ForgetSome
 	forgetPercent int
 
+	// counter to step through the subsets of the cache contents
+	// to delete
 	forgetCounter int
 }
 
@@ -55,12 +56,11 @@ func (c *ForgettingCache) ForgetSome() {
 	for key := range c.d.Keys(nil) {
 		hashCRC32 := int(crc32.ChecksumIEEE([]byte(key)))
 		if (hashCRC32 % modValue) == c.forgetCounter {
-			log.Printf("forgetting %v", key)
 			c.d.Erase(key)
 		}
 	}
 
-	c.forgetCounter = c.forgetCounter + 1
+	c.forgetCounter++
 	if c.forgetCounter == modValue {
 		c.forgetCounter = 0
 	}
