@@ -3,9 +3,9 @@ package main
 import (
 	"flag"
 	"fmt"
+	"github.com/nmandery/honeybee"
 	"log"
 	"os"
-    "github.com/nmandery/honeybee"
 )
 
 func init() {

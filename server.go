@@ -3,6 +3,7 @@ package honeybee
 import (
 	"fmt"
 	"github.com/julienschmidt/httprouter"
+	"github.com/peterbourgon/diskv"
 	"log"
 	"net/http"
 	"path"
@@ -16,8 +17,9 @@ type Server struct {
 	blockStore     BlockStore
 	templ          *template.Template
 	router         *httprouter.Router
-	proxyWrapper   *ImageProxyWrapper
+	imgProxy       *ImgProxy
 	doUpdatingChan chan bool
+	cache          Cache
 }
 
 // create a new server from the configuration directory
@@ -45,7 +47,19 @@ func NewServer(configDirectory string) (srv *Server, err error) {
 		return
 	}
 
-	proxyWrapper, err := NewImageProxyWrapper(&config)
+	err = EnsureDirectoryExists(config.Cache.Directory)
+	if err != nil {
+		log.Printf("Could not create cache directory: %v\n", err)
+		return
+	}
+	cache := NewForgettingCache(
+		diskv.New(diskv.Options{
+			BasePath:     config.Cache.Directory,
+			CacheSizeMax: 0,
+			Transform:    cacheTransformKeyToPath,
+		}), 10)
+
+	imgProxy, err := NewImgProxy(&config, cache)
 	if err != nil {
 		log.Printf("Could not setup caching proxy: %v\n", err)
 		return
@@ -57,8 +71,9 @@ func NewServer(configDirectory string) (srv *Server, err error) {
 		blockStore:     NewBlockStore(),
 		templ:          templ,
 		router:         httprouter.New(),
-		proxyWrapper:   proxyWrapper,
+		imgProxy:       imgProxy,
 		doUpdatingChan: make(chan bool),
+		cache:          cache,
 	}
 
 	// goroutine to update the blocks from the sources
@@ -111,11 +126,11 @@ func (s *Server) StopUpdating() {
 }
 
 func (s *Server) pullSources() (err error) {
-	s.proxyWrapper.ForgetSome()
+	s.cache.DeleteSome()
 
 	// use the imageanalyser to fill the size attributes of the blocks
 	// this also has the effect of pre-seeding the cache
-	ia := NewImageAnalyzer(s.proxyWrapper)
+	ia := NewImageAnalyzer(s.imgProxy)
 	_ = s.sources.SendBlocksTo(ia)
 	blocks, err := ia.GetBlocks()
 	if err != nil {
@@ -144,9 +159,9 @@ func (s *Server) handleImageRequest(w http.ResponseWriter, r *http.Request, ps h
 	}
 	//fmt.Fprintf(w, "id=%v, %v", id, found)
 
-	err := s.proxyWrapper.ProxyImage(w, block.ImageLink)
+	err := s.imgProxy.ProxyImage(w, r, block.ImageLink)
 	if err != nil {
-		http.Error(w, "could not create proxy request", http.StatusInternalServerError)
+		http.Error(w, "Could not read image from upstream server", http.StatusInternalServerError)
 	}
 }
 
@@ -176,4 +191,20 @@ func (s *Server) Serve() error {
 	bindTo := fmt.Sprintf(":%v", s.config.Http.Port)
 	log.Printf("Listening on %v ...\n", bindTo)
 	return http.ListenAndServe(bindTo, s)
+}
+
+// create a nested path for a cache key to avoid many
+// inodes in one directory
+func cacheTransformKeyToPath(s string) (parts []string) {
+	partLen := 2
+	depth := 3
+	sLen := len(s)
+	for i := 0; i < depth; i++ {
+		if (partLen * (i + 1)) > sLen {
+			parts = append(parts, "_")
+			break
+		}
+		parts = append(parts, s[partLen*i:partLen*(i+1)])
+	}
+	return
 }

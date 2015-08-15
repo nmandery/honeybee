@@ -9,6 +9,13 @@ import (
 	"io"
 )
 
+type Cache interface {
+	Get(string) ([]byte, bool)
+	Set(string, []byte)
+	Delete(string)
+	DeleteSome()
+}
+
 // ForgettingCache is an implementation of httpcache.Cache that supplements the in-memory map with persistent storage
 type ForgettingCache struct {
 	d *diskv.Diskv
@@ -47,7 +54,7 @@ func (c *ForgettingCache) Delete(key string) {
 // Drop a few entries from the cache, calling this function
 // will drop a few - more or less random - keys from the cache.
 // Call it repeatedly and all entires will be dropped.
-func (c *ForgettingCache) ForgetSome() {
+func (c *ForgettingCache) DeleteSome() {
 	modValue := 1
 	if c.forgetPercent > 0 && c.forgetPercent <= 100 {
 		modValue = 100 / c.forgetPercent

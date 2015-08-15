@@ -3,7 +3,10 @@ package honeybee
 import (
 	"crypto/sha1"
 	"encoding/base64"
+	"errors"
+	"fmt"
 	"io"
+	"os"
 	"os/user"
 	"path"
 	"strings"
@@ -47,4 +50,24 @@ func ExpandHome(p string) string {
 		}
 	}
 	return p
+}
+
+// ensure a directory exists, create it if it does not
+func EnsureDirectoryExists(d string) (err error) {
+	stat, err := os.Stat(d)
+	if err != nil {
+		if os.IsNotExist(err) {
+			err = os.MkdirAll(d, 0744)
+			if err != nil {
+				return
+			}
+		} else {
+			return
+		}
+	} else {
+		if !stat.IsDir() {
+			return errors.New(fmt.Sprintf("%v already exists, but is not a directory", d))
+		}
+	}
+	return nil
 }
