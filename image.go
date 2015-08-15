@@ -49,7 +49,7 @@ func NewImgProxy(c *Configuration, cache Cache) (imgProxy *ImgProxy, err error) 
 			Rotate:         0,
 			FlipVertical:   false,
 			FlipHorizontal: false,
-			Quality:        98,
+			Quality:        c.Image.Quality,
 			Signature:      "",
 		},
 		operations:    make(map[string]*downloadOperation),

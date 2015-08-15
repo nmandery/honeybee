@@ -26,6 +26,7 @@ http:
 image:
     maxheight: 0
     maxwidth: 350
+    quality: 95
 
 cache:
     directory: /tmp/honeybee-cache

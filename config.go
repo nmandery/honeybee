@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"gopkg.in/yaml.v2"
 	"io/ioutil"
+	"log"
 	"os"
 	"path"
 )
@@ -26,6 +27,7 @@ type CacheConfiguration struct {
 type ImageConfiguration struct {
 	Maxwidth  int
 	Maxheight int
+	Quality   int
 }
 
 type Configuration struct {
@@ -89,6 +91,14 @@ func ReadConfiguration(directory string) (config Configuration, err error) {
 
 	if config.Image.Maxwidth < 1 && config.Image.Maxheight < 1 {
 		config.Image.Maxheight = 300
+	}
+
+	if config.Image.Quality < 1 || config.Image.Quality > 100 {
+		defaultImgQuality := 95
+		if config.Image.Quality != 0 {
+			log.Printf("Illegal value for image quality. Using the default value (%d)", defaultImgQuality)
+		}
+		config.Image.Quality = defaultImgQuality
 	}
 
 	if config.UpdateInterval < 1 {
