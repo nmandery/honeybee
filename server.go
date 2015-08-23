@@ -81,10 +81,10 @@ func NewServer(configDirectory string) (srv *Server, err error) {
 		doUpdating := false
 		updateTimeout := 10
 		for {
-			if doUpdating || srv.blockStore.Size() == 0 {
+			if doUpdating {
 				log.Printf("Pulling sources.")
 
-				err := srv.pullSources()
+				err := srv.PullSources()
 				if err != nil {
 					log.Printf("Could not pull sources: %v", err)
 				}
@@ -125,7 +125,7 @@ func (s *Server) StopUpdating() {
 	s.doUpdatingChan <- false
 }
 
-func (s *Server) pullSources() (err error) {
+func (s *Server) PullSources() (err error) {
 	s.cache.DeleteSome()
 
 	// use the imageanalyser to fill the size attributes of the blocks
@@ -191,6 +191,11 @@ func (s *Server) Serve() error {
 	bindTo := fmt.Sprintf(":%v", s.config.Http.Port)
 	log.Printf("Listening on %v ...\n", bindTo)
 	return http.ListenAndServe(bindTo, s)
+}
+
+// drop all contents in the cache
+func (s *Server) DropCache() {
+	s.cache.DeleteAll()
 }
 
 // create a nested path for a cache key to avoid many

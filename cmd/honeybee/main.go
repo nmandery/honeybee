@@ -11,6 +11,8 @@ import (
 )
 
 var expvarPort int = 0
+var dropCache bool = false
+var noServe bool = false
 
 func init() {
 	flag.Usage = func() {
@@ -19,7 +21,9 @@ func init() {
 		flag.PrintDefaults()
 	}
 
-	flag.IntVar(&expvarPort, "expvar_port", 0, "Port to provide the expvar interface on. Disabled per default (0).")
+	flag.IntVar(&expvarPort, "expvar-port", 0, "Port to provide the expvar interface on. Disabled per default (0).")
+	flag.BoolVar(&dropCache, "drop-cache", false, "Drop the cache before starting the server.")
+	flag.BoolVar(&noServe, "no-serve", false, "Do not run the server")
 	flag.Parse()
 
 	// standard go logging
@@ -35,7 +39,7 @@ func main() {
 
 	if expvarPort != 0 {
 		go func() {
-			fmt.Printf("Serving expvar statistics on port %d\n", expvarPort)
+			log.Printf("Serving expvar statistics on port %d\n", expvarPort)
 			experr := http.ListenAndServe(fmt.Sprintf(":%d", expvarPort), nil)
 			if experr != nil {
 				log.Printf("Could not serve expvar stats on port %d: %v\n", expvarPort, experr)
@@ -51,11 +55,19 @@ func main() {
 		os.Exit(1)
 	}
 
-	srv.StartUpdating()
-	err = srv.Serve()
-	if err != nil {
-		log.Printf("%v\n", err)
-		os.Exit(1)
+	if dropCache {
+		log.Printf("Dropping the cache ...")
+		srv.DropCache()
+		log.Println("Cache dropped.")
+	}
+
+	if noServe == false {
+		srv.StartUpdating()
+		err = srv.Serve()
+		if err != nil {
+			log.Printf("%v\n", err)
+			os.Exit(1)
+		}
 	}
 	os.Exit(0)
 }

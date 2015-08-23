@@ -14,6 +14,7 @@ type Cache interface {
 	Set(string, []byte)
 	Delete(string)
 	DeleteSome()
+	DeleteAll()
 }
 
 // ForgettingCache is an implementation of httpcache.Cache that supplements the in-memory map with persistent storage
@@ -71,6 +72,11 @@ func (c *ForgettingCache) DeleteSome() {
 	if c.forgetCounter == modValue {
 		c.forgetCounter = 0
 	}
+}
+
+// delete the complete contents of the cache
+func (c *ForgettingCache) DeleteAll() {
+	c.d.EraseAll()
 }
 
 func keyToFilename(key string) string {
