@@ -30,13 +30,7 @@ func init() {
 	log.SetOutput(os.Stderr)
 }
 
-func main() {
-	args := flag.Args()
-	if len(args) != 1 {
-		fmt.Printf("Need exactly one argument specifying the configuration directory to use.\n")
-		os.Exit(1)
-	}
-
+func run(configDir string) (err error) {
 	if expvarPort != 0 {
 		go func() {
 			log.Printf("Serving expvar statistics on port %d\n", expvarPort)
@@ -48,11 +42,9 @@ func main() {
 		}()
 	}
 
-	var err error
-	srv, err := honeybee.NewServer(args[0])
+	srv, err := honeybee.NewServer(configDir)
 	if err != nil {
-		log.Printf("%v\n", err)
-		os.Exit(1)
+		return
 	}
 
 	if dropCache {
@@ -65,9 +57,22 @@ func main() {
 		srv.StartUpdating()
 		err = srv.Serve()
 		if err != nil {
-			log.Printf("%v\n", err)
-			os.Exit(1)
+			return
 		}
 	}
-	os.Exit(0)
+	return nil
+}
+
+func main() {
+	args := flag.Args()
+	if len(args) != 1 {
+		fmt.Printf("Need exactly one argument specifying the configuration directory to use.\n")
+		os.Exit(1)
+	}
+
+	err := run(args[0])
+	if err != nil {
+		log.Printf("%v\n", err)
+		os.Exit(1)
+	}
 }
