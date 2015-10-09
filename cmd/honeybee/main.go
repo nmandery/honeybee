@@ -13,6 +13,8 @@ import (
 var expvarPort int = 0
 var dropCache bool = false
 var noServe bool = false
+var httpPort int = 0
+var cacheDirectory string = ""
 
 func init() {
 	flag.Usage = func() {
@@ -24,6 +26,8 @@ func init() {
 	flag.IntVar(&expvarPort, "expvar-port", 0, "Port to provide the expvar interface on. Disabled per default (0).")
 	flag.BoolVar(&dropCache, "drop-cache", false, "Drop the cache before starting the server.")
 	flag.BoolVar(&noServe, "no-serve", false, "Do not run the server")
+	flag.IntVar(&httpPort, "http_port", 0, "Port to listen on. This will override the port specified in the configuration file.")
+	flag.StringVar(&cacheDirectory, "cache_directory", "", "Drectory to use as cache. This will override the port specified in the configuration file.")
 	flag.Parse()
 
 	// standard go logging
@@ -42,7 +46,22 @@ func run(configDir string) (err error) {
 		}()
 	}
 
-	srv, err := honeybee.NewServer(configDir)
+	var config honeybee.Configuration
+	config, err = honeybee.ReadConfiguration(configDir)
+	if err != nil {
+		log.Printf("Could not read config file: %v\n", err)
+		return
+	}
+
+	if httpPort > 0 {
+		config.Http.Port = httpPort
+	}
+	if cacheDirectory != "" {
+		config.Cache.Directory = cacheDirectory
+	}
+
+	var srv *honeybee.Server
+	srv, err = honeybee.NewServer(&config)
 	if err != nil {
 		return
 	}

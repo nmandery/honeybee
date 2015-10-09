@@ -12,7 +12,7 @@ import (
 )
 
 type Server struct {
-	config         Configuration
+	config         *Configuration
 	sources        Sources
 	blockStore     BlockStore
 	templ          *template.Template
@@ -23,19 +23,14 @@ type Server struct {
 }
 
 // create a new server from the configuration directory
-func NewServer(configDirectory string) (srv *Server, err error) {
-	config, err := ReadConfiguration(configDirectory)
-	if err != nil {
-		log.Printf("Could not read config file: %v\n", err)
-		return
-	}
+func NewServer(config *Configuration) (srv *Server, err error) {
 	err = config.Validate()
 	if err != nil {
 		log.Printf("configuration problem: %v\n", err)
 		return
 	}
 
-	sources, err := CreateSources(&config)
+	sources, err := CreateSources(config)
 	if err != nil {
 		log.Printf("Could setup sources: %v\n", err)
 		return
@@ -59,7 +54,7 @@ func NewServer(configDirectory string) (srv *Server, err error) {
 			Transform:    cacheTransformKeyToPath,
 		}), 10)
 
-	imgProxy, err := NewImgProxy(&config, cache)
+	imgProxy, err := NewImgProxy(config, cache)
 	if err != nil {
 		log.Printf("Could not setup caching proxy: %v\n", err)
 		return
